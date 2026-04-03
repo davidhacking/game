@@ -6,19 +6,8 @@
   空位: '.'
 
 棋盘尺寸: 10 行 × 9 列
+坐标系: 横坐标 1~9, 纵坐标 A~J
 """
-
-# 棋子 -> 中文显示
-PIECE_NAMES = {
-    # 红方
-    "r": "車", "n": "馬", "b": "相", "a": "仕", "k": "帥",
-    "c": "炮", "p": "兵",
-    # 黑方
-    "R": "車", "N": "馬", "B": "象", "A": "士", "K": "將",
-    "C": "砲", "P": "卒",
-    # 空位
-    ".": "．",
-}
 
 # 红方棋子集合
 RED_PIECES = set("rnbakcp")
@@ -28,18 +17,21 @@ BLACK_PIECES = set("RNBAKCP")
 ROWS = 10
 COLS = 9
 
+# 纵坐标标签
+ROW_LABELS = [chr(ord("A") + i) for i in range(ROWS)]  # A~J
+
 # 初始棋盘布局
 INIT_BOARD = [
-    ["R", "N", "B", "A", "K", "A", "B", "N", "R"],  # 0  黑方底线
-    [".", ".", ".", ".", ".", ".", ".", ".", "."],  # 1
-    [".", "C", ".", ".", ".", ".", ".", "C", "."],  # 2  黑炮
-    ["P", ".", "P", ".", "P", ".", "P", ".", "P"],  # 3  黑卒
-    [".", ".", ".", ".", ".", ".", ".", ".", "."],  # 4
-    [".", ".", ".", ".", ".", ".", ".", ".", "."],  # 5  楚河汉界
-    ["p", ".", "p", ".", "p", ".", "p", ".", "p"],  # 6  红兵
-    [".", "c", ".", ".", ".", ".", ".", "c", "."],  # 7  红炮
-    [".", ".", ".", ".", ".", ".", ".", ".", "."],  # 8
-    ["r", "n", "b", "a", "k", "a", "b", "n", "r"],  # 9  红方底线
+    ["R", "N", "B", "A", "K", "A", "B", "N", "R"],  # A  黑方底线
+    [".", ".", ".", ".", ".", ".", ".", ".", "."],  # B
+    [".", "C", ".", ".", ".", ".", ".", "C", "."],  # C  黑炮
+    ["P", ".", "P", ".", "P", ".", "P", ".", "P"],  # D  黑卒
+    [".", ".", ".", ".", ".", ".", ".", ".", "."],  # E
+    [".", ".", ".", ".", ".", ".", ".", ".", "."],  # F  楚河汉界
+    ["p", ".", "p", ".", "p", ".", "p", ".", "p"],  # G  红兵
+    [".", "c", ".", ".", ".", ".", ".", "c", "."],  # H  红炮
+    [".", ".", ".", ".", ".", ".", ".", ".", "."],  # I
+    ["r", "n", "b", "a", "k", "a", "b", "n", "r"],  # J  红方底线
 ]
 
 
@@ -76,59 +68,27 @@ class Board:
 
     # ──────────── 显示 ────────────
 
-    def _piece_display(self, piece):
-        """返回棋子的中文显示字符串（带颜色）"""
-        name = PIECE_NAMES.get(piece, piece)
-        if piece in RED_PIECES:
-            # 红色 ANSI
-            return f"\033[31m{name}\033[0m"
-        elif piece in BLACK_PIECES:
-            # 绿色 ANSI
-            return f"\033[32m{name}\033[0m"
-        else:
-            return name
-
     def display(self):
-        """以中文棋子 + 棋盘框线打印棋盘"""
-        col_labels = "　".join(
-            [str(i) for i in range(COLS)]
-        )
-        print(f"　　{col_labels}")
-        print(f"　　{'─' * (COLS * 2 + COLS - 1)}")
+        """以字母打印棋盘，横坐标 1~9，纵坐标 A~J"""
+        # 列标题
+        print("  " + " ".join(str(i) for i in range(1, COLS + 1)))
 
-        for row_idx in range(ROWS):
-            pieces = "─".join(
-                self._piece_display(self.grid[row_idx][col])
-                for col in range(COLS)
-            )
-            print(f" {row_idx} │{pieces}│")
-
-            if row_idx == 4:
-                # 楚河汉界
-                print(f"　　│{'　' * 2}楚　河　　　汉　界{'　' * 2}│")
-
-        print(f"　　{'─' * (COLS * 2 + COLS - 1)}")
-
-    def display_simple(self):
-        """简洁的英文字母显示（调试用）"""
-        print("   " + " ".join(str(i) for i in range(COLS)))
         for row_idx in range(ROWS):
             row_str = " ".join(self.grid[row_idx])
-            print(f"{row_idx:2d} {row_str}")
+            print(f"{ROW_LABELS[row_idx]} {row_str}")
             if row_idx == 4:
-                print("   " + "= " * COLS + " 楚河汉界")
+                print("  " + "= " * COLS)
 
     def __str__(self):
-        """返回简洁棋盘字符串"""
-        lines = []
+        """返回棋盘字符串"""
+        lines = ["  " + " ".join(str(i) for i in range(1, COLS + 1))]
         for row_idx in range(ROWS):
-            lines.append(f"{row_idx} " + " ".join(self.grid[row_idx]))
+            lines.append(f"{ROW_LABELS[row_idx]} " + " ".join(self.grid[row_idx]))
+            if row_idx == 4:
+                lines.append("  " + "= " * COLS + "楚河汉界")
         return "\n".join(lines)
 
 
 if __name__ == "__main__":
     board = Board()
-    print("===== 中文棋盘 =====\n")
     board.display()
-    print("\n===== 简洁模式 =====\n")
-    board.display_simple()
