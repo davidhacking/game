@@ -79,6 +79,68 @@ def _count_between_orth(grid, r1, c1, r2, c2):
     return count
 
 
+# 棋子合法位置表 (内部 grid 坐标: row 0=黑底线, row 9=红底线)
+_VALID_POSITIONS = {
+    # 红仕(a): 九宫对角线5点
+    "a": {(7, 3), (7, 5), (8, 4), (9, 3), (9, 5)},
+    # 黑士(A): 九宫对角线5点
+    "A": {(0, 3), (0, 5), (1, 4), (2, 3), (2, 5)},
+    # 红相(b): 田字7点 (红方半场 row 5-9)
+    "b": {(5, 2), (5, 6), (7, 0), (7, 4), (7, 8), (9, 2), (9, 6)},
+    # 黑象(B): 田字7点 (黑方半场 row 0-4)
+    "B": {(0, 2), (0, 6), (2, 0), (2, 4), (2, 8), (4, 2), (4, 6)},
+}
+
+# 棋子中文名 (用于错误提示)
+_PIECE_NAMES = {
+    "r": "红车", "n": "红马", "b": "红相", "a": "红仕", "k": "红帅", "c": "红炮", "p": "红兵",
+    "R": "黑车", "N": "黑马", "B": "黑象", "A": "黑士", "K": "黑将", "C": "黑炮", "P": "黑卒",
+}
+
+
+def _validate_piece_positions(grid):
+    """校验棋盘上所有棋子是否在合法位置
+
+    检查规则:
+    - 将/帅: 必须在九宫内
+    - 士/仕: 必须在九宫对角线5个点上
+    - 象/相: 必须在己方半场的7个田字点上
+    - 兵/卒: 不能在己方底线区域 (未过河前只能前进)
+    """
+    errors = []
+    for row in range(ROWS):
+        for col in range(COLS):
+            piece = grid[row][col]
+            if piece == ".":
+                continue
+
+            iccs_col = chr(ord("a") + col)
+            iccs_row = 9 - row
+
+            # 将/帅: 九宫检查
+            if piece in ("k", "K") and not _in_palace(row, col, piece):
+                errors.append(f"{_PIECE_NAMES[piece]}在{iccs_col}{iccs_row}不合法(应在九宫内)")
+
+            # 士/仕、象/相: 查表
+            if piece in _VALID_POSITIONS:
+                if (row, col) not in _VALID_POSITIONS[piece]:
+                    valid_str = ", ".join(
+                        f"{chr(ord('a') + c)}{9 - r}" for r, c in sorted(_VALID_POSITIONS[piece])
+                    )
+                    errors.append(
+                        f"{_PIECE_NAMES[piece]}在{iccs_col}{iccs_row}不合法(合法位置: {valid_str})"
+                    )
+
+            # 兵/卒: 红兵只能在 ICCS 行3~9 (grid row 0~6)，黑卒只能在 ICCS 行0~6 (grid row 3~9)
+            if piece == "p" and row > 6:  # 红兵在 grid row 7-9 (ICCS 行0-2) 不合法
+                errors.append(f"{_PIECE_NAMES[piece]}在{iccs_col}{iccs_row}不合法(红兵只能在ICCS行3~9)")
+            if piece == "P" and row < 3:  # 黑卒在 grid row 0-2 (ICCS 行7-9) 不合法
+                errors.append(f"{_PIECE_NAMES[piece]}在{iccs_col}{iccs_row}不合法(黑卒只能在ICCS行0~6)")
+
+    if errors:
+        raise ValueError("FEN 棋子位置不合法:\n  " + "\n  ".join(errors))
+
+
 class Board:
     """中国象棋棋盘"""
 
@@ -87,6 +149,48 @@ class Board:
             self.grid = [row[:] for row in board]
         else:
             self.grid = [row[:] for row in INIT_BOARD]
+
+    @classmethod
+    def from_fen(cls, fen):
+        """从 FEN 字符串创建棋盘
+
+        FEN 标准: 大写=红方, 小写=黑方。
+        但本项目内部约定: 小写=红方, 大写=黑方，需要翻转大小写。
+        末尾可选 ' w'(红先) 或 ' b'(黑先)。
+        返回 (Board, red_first) 元组。
+        """
+        # FEN字符 -> 内部编码 (大小写翻转)
+        fen_to_piece = {
+            "R": "r", "N": "n", "B": "b", "A": "a", "K": "k", "C": "c", "P": "p",
+            "r": "R", "n": "N", "b": "B", "a": "A", "k": "K", "c": "C", "p": "P",
+        }
+
+        parts = fen.strip().split()
+        board_part = parts[0]
+        red_first = True
+        if len(parts) > 1:
+            red_first = parts[1].lower() == "w"
+
+        rows = board_part.split("/")
+        if len(rows) != ROWS:
+            raise ValueError(f"FEN 应有 {ROWS} 行，得到 {len(rows)} 行")
+
+        grid = []
+        for row_str in rows:
+            row = []
+            for ch in row_str:
+                if ch.isdigit():
+                    row.extend(["."] * int(ch))
+                elif ch in fen_to_piece:
+                    row.append(fen_to_piece[ch])
+                else:
+                    raise ValueError(f"FEN 未知字符 '{ch}'")
+            if len(row) != COLS:
+                raise ValueError(f"FEN 行 '{row_str}' 解析后应有 {COLS} 列，得到 {len(row)} 列")
+            grid.append(row)
+
+        _validate_piece_positions(grid)
+        return cls(board=grid), red_first
 
     def __getitem__(self, pos):
         row, col = pos
@@ -246,6 +350,25 @@ class Board:
         self.grid[fr][fc] = saved_from
         self.grid[tr][tc] = saved_to
         if illegal:
+            # 困毙时允许将/帅走送死棋（让对方吃掉自然终局）
+            if p == "k":
+                # 检查该方是否有任何不送死的走法
+                has_safe = False
+                for r2 in range(ROWS):
+                    for c2 in range(COLS):
+                        pc2 = self.grid[r2][c2]
+                        if pc2 == "." or (red and pc2 not in RED_PIECES) or (not red and pc2 not in BLACK_PIECES):
+                            continue
+                        for tr2, tc2 in self._candidates(r2, c2):
+                            if self._is_legal_after_move(r2, c2, tr2, tc2, pc2, red):
+                                has_safe = True
+                                break
+                        if has_safe:
+                            break
+                    if has_safe:
+                        break
+                if not has_safe:
+                    return  # 困毙，允许将/帅走送死棋
             raise ValueError("走后被将军或将帅对面")
 
     # ──────────── 走法生成 ────────────
@@ -403,6 +526,23 @@ class Board:
                         targets.append((tr, tc))
                 if targets:
                     all_moves[(r, c)] = targets
+
+        # 只要将/帅还在棋盘上，就不能判"无棋可走"。
+        # 若所有走法都会被将军（困毙），则放开将/帅的全部候选走法
+        # （包括送吃），让对方通过吃将/帅来自然终局。
+        if not all_moves:
+            king_pos = self._find_king(red)
+            if king_pos is not None:
+                kr, kc = king_pos
+                king_piece = self.grid[kr][kc]
+                king_targets = []
+                for tr, tc in self._candidates(kr, kc):
+                    target = self.grid[tr][tc]
+                    if target == "." or not _same_side(king_piece, target):
+                        king_targets.append((tr, tc))
+                if king_targets:
+                    all_moves[(kr, kc)] = king_targets
+
         return all_moves
 
     def display_moves(self, red):

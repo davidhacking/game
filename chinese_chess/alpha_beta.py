@@ -243,7 +243,7 @@ def alphabeta(board, depth, alpha, beta, maximizing, nodes_counter=None,
             board.grid[fr][fc] = saved_from
             board.grid[tr][tc] = saved_to
 
-            if score > max_eval:
+            if score > max_eval or best_move is None:
                 max_eval = score
                 best_move = Board.move_to_iccs(fr, fc, tr, tc)
 
@@ -276,7 +276,7 @@ def alphabeta(board, depth, alpha, beta, maximizing, nodes_counter=None,
             board.grid[fr][fc] = saved_from
             board.grid[tr][tc] = saved_to
 
-            if score < min_eval:
+            if score < min_eval or best_move is None:
                 min_eval = score
                 best_move = Board.move_to_iccs(fr, fc, tr, tc)
 

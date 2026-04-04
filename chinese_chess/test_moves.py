@@ -597,6 +597,7 @@ def test_game_over_king_captured():
 
 
 def test_no_moves_means_lose():
+    """将帅都在时，即使被困也有送死走法（困毙不判无棋可走）"""
     board = make_board("""
         . . . r K r . . .
         . . . . r . . . .
@@ -609,8 +610,10 @@ def test_no_moves_means_lose():
         . . . . . . . . .
         . . . . k . . . .
     """)
-    total = sum(len(t) for t in board.generate_moves(False).values())
-    assert total == 0
+    moves = board.generate_moves(False)
+    total = sum(len(t) for t in moves.values())
+    # 黑将被困但仍应有走法（送死），游戏通过吃将终局
+    assert total > 0, "将帅都在时应有走法（含送死）"
 
 
 # ═══════════════════ 棋谱走法验证 ═══════════════════

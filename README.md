@@ -2,6 +2,8 @@
 
 ## 中国象棋
 
+纯 Python 实现的中国象棋 CLI 游戏，零外部依赖。支持双人对弈、棋谱回放、人机对弈 (Alpha-Beta 剪枝 AI) 以及 AI 自对弈。
+
 ### 运行
 
 ```bash
@@ -12,7 +14,18 @@ uv run python chinese_chess/main.py
 
 **1. 对弈模式** — 双人轮流走棋
 
-**2. 棋谱模式** — 查看 10 个经典棋谱，按 Enter 逐步播放
+**2. 棋谱模式** — 收录 30 局 2000 年全国象棋锦标赛经典棋谱，按 Enter 逐步播放
+
+**3. 人机对弈** — 与 AI 对弈，可选完整开局或残局棋盘，可选执红/执黑，搜索深度 1~8 可调
+
+**4. AI 自对弈** — 可选完整开局或残局棋盘，红方/黑方各自设定搜索深度，支持逐步或自动播放
+
+### AI 引擎
+
+- **算法**: Alpha-Beta 剪枝搜索
+- **评估**: 子力价值 + 位置加成表 (PST)，参考 elephantfish
+- **搜索深度**: 1~8 可调，实时显示节点数、耗时、评分
+- **走法排序**: 优化剪枝效率
 
 ### 坐标系 (ICCS)
 
@@ -43,3 +56,19 @@ uv run python chinese_chess/main.py
 - `H` — 列出黑方所有可走棋步（带编号）
 - 输入编号直接走对应棋步
 - `q` — 退出
+
+### 项目结构
+
+```
+chinese_chess/
+├── main.py          # 主程序入口 & 4 种游戏模式
+├── board.py         # 棋盘逻辑 & 走法校验 & FEN 解析
+├── alpha_beta.py    # AI 引擎 (Alpha-Beta 剪枝)
+├── games.py         # 30 局经典棋谱数据
+├── endgames.py      # 40 个残局题集 (杀法/基础残局/实用定式/古谱，标注胜/和)
+├── test_moves.py    # 走法规则测试
+├── test_games.py    # 棋谱回放测试
+├── test_ai.py       # AI 引擎测试
+├── test_self_play.py # AI 自对弈测试
+└── test_endgame_ai.py # 残局 AI 对弈测试
+```

@@ -11,6 +11,7 @@ import sys
 from board import Board
 from games import GAMES
 from alpha_beta import ChessAI
+from endgames import ENDGAMES
 
 
 def check_game_over(board, red_turn):
@@ -29,6 +30,57 @@ def check_game_over(board, red_turn):
         print(f"\n  === {winner}胜! ({loser}无棋可走) ===")
         return True
     return False
+
+
+def choose_board():
+    """选择棋盘: 完整开局 或 残局
+
+    Returns:
+        (Board, red_first): 棋盘和先手方
+        None: 用户取消
+    """
+    print("\n选择棋盘:")
+    print("  1. 完整开局")
+    print("  2. 残局 (默认)")
+    try:
+        choice = input("选择 (默认2): ").strip()
+    except (EOFError, KeyboardInterrupt):
+        return None
+
+    if choice == "1":
+        return Board(), True
+
+    # 默认残局
+    if not ENDGAMES:
+        print("没有可用的残局!")
+        return None
+
+    print(f"\n残局列表:")
+    print(f"  {'序号':<4} {'名称':<12} {'分类':<8} 难度")
+    print(f"  {'─' * 40}")
+    for i, eg in enumerate(ENDGAMES, 1):
+        stars = "★" * eg.get("difficulty", 1)
+        print(f"  {i:<4} {eg['name']:<12} {eg.get('category', ''):<8} {stars}")
+
+    try:
+        idx_str = input("\n输入残局序号 (默认1, q=返回): ").strip()
+    except (EOFError, KeyboardInterrupt):
+        return None
+
+    if idx_str.lower() in ("q", "quit", "exit"):
+        return None
+    if idx_str == "":
+        idx_str = "1"
+    if not idx_str.isdigit() or not (1 <= int(idx_str) <= len(ENDGAMES)):
+        print(f"无效序号，应为 1~{len(ENDGAMES)}")
+        return None
+
+    eg = ENDGAMES[int(idx_str) - 1]
+    board, red_first = Board.from_fen(eg["fen"])
+    fm = eg.get("first_move", "red")
+    red_first = fm == "red"
+    print(f"\n  残局: {eg['name']}  {'红先' if red_first else '黑先'}")
+    return board, red_first
 
 
 def play_mode():
@@ -142,6 +194,12 @@ def replay_mode():
 
 def ai_mode():
     """人机对弈模式"""
+    # 选择棋盘
+    result = choose_board()
+    if result is None:
+        return
+    board, default_red_first = result
+
     # 选择执红/执黑
     print("\n选择执子方:")
     print("  1. 执红 (先手)")
@@ -168,10 +226,9 @@ def ai_mode():
     ai = ChessAI(depth=depth)
     print(f"\n  你执{human_side}, AI 执{ai_side}, 搜索深度={depth}")
 
-    board = Board()
     board.display()
     last_move_list = None
-    red_turn = True
+    red_turn = default_red_first
 
     while True:
         if check_game_over(board, red_turn):
@@ -244,17 +301,23 @@ def ai_mode():
 
 def ai_vs_ai_mode():
     """AI 自对弈模式"""
+    # 选择棋盘
+    result = choose_board()
+    if result is None:
+        return
+    board, default_red_first = result
+
     # 选择搜索深度
     try:
-        red_depth_input = input("红方搜索深度 (1~8, 默认3): ").strip()
-        black_depth_input = input("黑方搜索深度 (1~8, 默认3): ").strip()
+        red_depth_input = input("红方搜索深度 (1~8, 默认5): ").strip()
+        black_depth_input = input("黑方搜索深度 (1~8, 默认5): ").strip()
     except (EOFError, KeyboardInterrupt):
         return
 
-    red_depth = 3
+    red_depth = 5
     if red_depth_input.isdigit() and 1 <= int(red_depth_input) <= 8:
         red_depth = int(red_depth_input)
-    black_depth = 3
+    black_depth = 5
     if black_depth_input.isdigit() and 1 <= int(black_depth_input) <= 8:
         black_depth = int(black_depth_input)
 
@@ -278,9 +341,8 @@ def ai_vs_ai_mode():
     black_ai = ChessAI(depth=black_depth)
     print(f"\n  红方深度={red_depth} vs 黑方深度={black_depth}, 最大 {max_moves} 步\n")
 
-    board = Board()
     board.display()
-    red_turn = True
+    red_turn = default_red_first
 
     for step in range(1, max_moves + 1):
         if check_game_over(board, red_turn):
@@ -328,15 +390,17 @@ def main():
         print("  1. 对弈模式")
         print("  2. 棋谱模式")
         print("  3. 人机对弈")
-        print("  4. AI 自对弈")
+        print("  4. AI 自对弈 (默认)")
         print("  q. 退出")
 
         try:
-            choice = input("\n选择: ").strip().lower()
+            choice = input("\n选择 (默认4): ").strip().lower()
         except (EOFError, KeyboardInterrupt):
             print("\n再见!")
             break
 
+        if choice == "":
+            choice = "4"
         if choice in ("q", "quit", "exit"):
             break
         elif choice == "1":
