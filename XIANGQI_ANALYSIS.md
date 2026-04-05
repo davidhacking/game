@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Location:** `/Users/winnieshi/MF/github/game/`  
+**Location:** `~/MF/github/game/`  
 **Language:** Python (3.13+)  
 **Framework:** Standard library + custom implementations (no external dependencies)  
 **Total Lines:** 4,403 lines across 12 Python files
@@ -17,7 +17,7 @@
 
 ## 1. GEN_GAMES Module - Game Data Fetching
 
-**File:** `/Users/winnieshi/MF/github/game/chinese_chess/gen_games.py` (228 lines)
+**File:** `~/MF/github/game/chinese_chess/gen_games.py` (228 lines)
 
 ### Purpose
 Downloads professional game records from xqbase.com (象棋巫师棋谱仓库 - Elephant Wizard Game Repository), converts them to ICCS format, and generates a Python module with playable games.
@@ -131,7 +131,7 @@ uv run python chinese_chess/gen_games.py [count] [start_id]
   - Ensures all games can be played to completion
 
 ### Output Location
-- **Generated File:** `/Users/winnieshi/MF/github/game/chinese_chess/games.py`
+- **Generated File:** `~/MF/github/game/chinese_chess/games.py`
 - **Current Games in games.py:** 10 professional games
 - **Validation:** All games verified playable
 
@@ -350,7 +350,7 @@ Returns: `True` if game over, prints winner message
 
 ## 5. Game Logic - Board Implementation
 
-**File:** `/Users/winnieshi/MF/github/game/chinese_chess/board.py` (484 lines)
+**File:** `~/MF/github/game/chinese_chess/board.py` (484 lines)
 
 ### Board Class: `class Board`
 
@@ -493,7 +493,7 @@ Execute a single move.
 
 ## 6. AI Engine - Alpha-Beta Search
 
-**File:** `/Users/winnieshi/MF/github/game/chinese_chess/alpha_beta.py` (335 lines)
+**File:** `~/MF/github/game/chinese_chess/alpha_beta.py` (335 lines)
 
 ### Evaluation Function: `evaluate(board) -> int`
 

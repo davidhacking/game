@@ -6,7 +6,7 @@ import { execFile } from "node:child_process";
 import path from "node:path";
 
 const PYTHON = process.env.PYTHON ?? "python3";
-const ENGINE_PATH = path.resolve("/Users/winnieshi/MF/github/game/chinese_chess/chess_engine.py");
+const ENGINE_PATH = path.resolve(process.env.HOME ?? "~", "MF/github/game/chinese_chess/chess_engine.py");
 const ENGINE_CWD = path.dirname(ENGINE_PATH);
 
 // ---------------------------------------------------------------------------
