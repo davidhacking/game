@@ -24,6 +24,8 @@
 - **每次修改完代码后，必须运行所有测试用例，确保全部通过后才算完成**
 - **遇到一个 badcase 时，必须修复这一类问题，而不是只修单个点**
 - **新任务流程**：在 `tasks/` 目录下创建以任务命名的文件夹，先出 `README.md`（任务说明/方案文档），再添加脚本等其他文件
+- **任务执行中持续更新 README**：任务开始时先生成方案写入 README.md，执行过程中用户反馈遇到问题时，必须及时更新 README.md（记录问题、原因、解决方案），确保 README 始终反映任务的最新状态
+- **长耗时任务使用 sub agent**：如果评估当前任务执行时间很长（如安装大量软件包、下载大文件、编译等），应启动 sub agent（通过 Agent 工具）来执行具体操作，主 agent 负责管理和协调子 agent，避免长时间阻塞等待
 
 ## Session Log
 <!-- Claude will append notes here about what was done in each session -->
