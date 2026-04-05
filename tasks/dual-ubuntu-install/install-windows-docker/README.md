@@ -51,3 +51,26 @@ docker compose -f ~/windows-docker/docker-compose.yml logs -f
 - `CPU_CORES`: CPU 核数（默认 4）
 - `DISK_SIZE`: 磁盘大小（默认 64G）
 - `VERSION`: Windows 版本（默认 win11）
+
+---
+
+## 踩坑记录
+
+### 问题 1：`sudo` 报 `unable to resolve host winnieshi-LC1`
+
+**现象**：脚本运行时每条 sudo 命令都报 `unable to resolve host winnieshi-LC1: Name or service not known`。
+
+**原因**：`/etc/hostname` 为 `winnieshi-LC1`，但 `/etc/hosts` 里只有 `ubuntu2` 的映射，缺少 `winnieshi-LC1`。
+
+**修复**：
+```bash
+sudo sed -i 's/127\.0\.1\.1   ubuntu2/127.0.1.1   ubuntu2 winnieshi-LC1/' /etc/hosts
+```
+
+### 问题 2：Docker GPG key 下载时 SSL 连接被重置
+
+**现象**：`curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor` 报 `OpenSSL SSL_connect: Connection reset by peer`，导致 gpg 收到空数据，报 `no valid OpenPGP data found`。
+
+**原因**：网络偶发 SSL 握手失败（管道方式无法重试，一次失败即中断）。
+
+**修复**：改为先 curl 下载到临时文件（带 `--retry 3`），再 gpg 解码，整体加最多 3 次外层重试循环。

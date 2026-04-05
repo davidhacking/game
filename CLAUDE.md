@@ -27,5 +27,8 @@
 - **任务执行中持续更新 README**：任务开始时先生成方案写入 README.md，执行过程中用户反馈遇到问题时，必须及时更新 README.md（记录问题、原因、解决方案），确保 README 始终反映任务的最新状态
 - **长耗时任务使用 sub agent**：如果评估当前任务执行时间很长（如安装大量软件包、下载大文件、编译等），应启动 sub agent（通过 Agent 工具）来执行具体操作，主 agent 负责管理和协调子 agent，避免长时间阻塞等待
 
+## Interaction Style
+- **成就确认仪式**：当 Claude 终于做好了一件事，或者做得非常快时，可以问用户「帅吗？宝贝~」。如果用户回答「帅」，则将本次解决问题的经验写入**对应 task 的 README.md** 持久化（而不是写入 CLAUDE.md）。
+
 ## Session Log
 <!-- Claude will append notes here about what was done in each session -->

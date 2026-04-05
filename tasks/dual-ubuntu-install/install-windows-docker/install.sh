@@ -32,8 +32,25 @@ install_docker() {
     sudo apt-get install -y ca-certificates curl gnupg
 
     sudo install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
-        | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+    # 带重试的 GPG key 下载（偶发 SSL reset 问题）
+    local gpg_downloaded=false
+    for attempt in 1 2 3; do
+        info "下载 Docker GPG key（第 $attempt 次尝试）..."
+        if curl -fsSL --retry 3 --retry-delay 2 https://download.docker.com/linux/ubuntu/gpg \
+                -o /tmp/docker.gpg 2>&1 && \
+           gpg --dearmor < /tmp/docker.gpg > /tmp/docker.gpg.dearmored 2>&1 && \
+           sudo install -m 644 /tmp/docker.gpg.dearmored /etc/apt/keyrings/docker.gpg; then
+            rm -f /tmp/docker.gpg /tmp/docker.gpg.dearmored
+            gpg_downloaded=true
+            break
+        fi
+        warn "第 $attempt 次失败，等待 3 秒后重试..."
+        sleep 3
+    done
+    if ! $gpg_downloaded; then
+        error "下载 Docker GPG key 失败，请检查网络连接"
+    fi
     sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
