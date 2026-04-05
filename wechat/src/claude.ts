@@ -2,7 +2,7 @@
  * Claude Code 会话管理 — 通过 claude-internal CLI 的 -p 模式交互
  * 每个微信用户维护独立的会话 (session)
  *
- * 始终在项目根目录 (/Users/winnieshi/MF/github/game) 下启动 claude-internal，
+ * 始终在项目根目录 (~/MF/github/game) 下启动 claude-internal，
  * 这样 CLI 会自动加载该目录下的 .claude/settings.json 和 CLAUDE.md 配置。
  */
 import { spawn } from "node:child_process";
@@ -12,7 +12,7 @@ import path from "node:path";
 const CLAUDE_CLI = process.env.CLAUDE_CLI ?? "claude-internal";
 
 /** Claude Code 工作目录 — 即项目根目录，确保读取 .claude 和 CLAUDE.md */
-const CLAUDE_CWD = process.env.CLAUDE_CWD ?? path.resolve("/Users/winnieshi/MF/github/game");
+const CLAUDE_CWD = process.env.CLAUDE_CWD ?? path.resolve(process.env.HOME ?? "~", "MF/github/game");
 
 /** 微信场景的系统提示词 — 定义助手人设，通过 --append-system-prompt 追加 */
 const WECHAT_SYSTEM_PROMPT = `你是 davidshi 的个人助手，正在通过微信和用户对话。
