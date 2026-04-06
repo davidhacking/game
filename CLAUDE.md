@@ -15,9 +15,11 @@
   - `main.py` - 游戏主程序（人机对弈/AI自弈等模式）
   - `test_*.py` - 测试用例
 - `wechat/` - 微信 <-> Claude Code 桥接服务（TypeScript）
+- `win_ctrl/` - Windows 命令行控制工具（通过 SSH + Windows 内置 OpenSSH Server）
 - `tasks/` - 任务文档目录（每个任务一个文件夹，含 README.md）
 - `start_game.py` - 快捷启动人机对弈脚本
 - `XIANGQI_ANALYSIS.md` - 棋局分析文档
+- **新增项目应与 `chinese_chess/`、`wechat/` 同级**，即放在项目根目录 `/home/david/MF/github/game/` 下
 
 ## User Preferences
 - Preferred language for communication: 中文 (Chinese)
@@ -29,6 +31,9 @@
 
 ## Interaction Style
 - **成就确认仪式**：当 Claude 终于做好了一件事，或者做得非常快时，可以问用户「帅吗？宝贝~」。如果用户回答「帅」，则将本次解决问题的经验写入**对应 task 的 README.md** 持久化（而不是写入 CLAUDE.md）。
+
+## Problem-Solving Workflow
+- **遇到问题时，先到 `tasks/` 目录搜索相关历史任务**，加载上下文，借助历史经验解决问题，避免重复踩坑
 
 ## Session Log
 <!-- Claude will append notes here about what was done in each session -->

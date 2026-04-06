@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[oc]
+
+# Virtual environments
+.venv
+environments/
+
+# uv / pip
+uv.lock
+*.egg-info
+
+# Data (large files, not for version control)
+data/
+
+# Model checkpoints & outputs
+*.pkl
+*.pth
+*.h5
+*.ckpt
+*.npy
+*.npz
+
+# Logs
+*.log
+install_log.txt
+
+# Secrets / config with credentials
+.env
+.env.*
+
+# OS
+.DS_Store

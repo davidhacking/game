@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.py[oc]
+
+# Virtual environments
+.venv
+
+# uv
+uv.lock
+
+# OS
+.DS_Store

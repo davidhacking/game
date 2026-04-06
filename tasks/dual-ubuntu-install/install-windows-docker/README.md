@@ -25,6 +25,26 @@ bash tasks/install-windows-docker/install.sh
 - Windows 首次启动需要约 10-20 分钟完成安装
 - 默认分配 4 核 CPU、8GB 内存、64GB 磁盘
 
+## 快捷脚本
+
+- `~/bin/restart_windows.sh` — 重启 Windows 容器（始终 down + up）
+
+## 声音说明
+
+**noVNC（http://localhost:8006）不支持音频**，它只是一个视频流。
+
+要听到声音，必须用 **RDP 连接**（RDP 协议原生支持音频重定向）：
+
+```bash
+# 安装 xfreerdp（如未安装）
+sudo apt install freerdp2-x11 -y
+
+# 连接并开启音频
+xfreerdp /v:localhost:3389 /u:windows /p:windows /sound:sys:pulse
+```
+
+或者打开 **Remmina** → 新建 RDP 连接 → 音频选项选「在本机播放」。
+
 ## 常用命令
 
 ```bash
@@ -73,4 +93,19 @@ sudo sed -i 's/127\.0\.1\.1   ubuntu2/127.0.1.1   ubuntu2 winnieshi-LC1/' /etc/h
 
 **原因**：网络偶发 SSL 握手失败（管道方式无法重试，一次失败即中断）。
 
-**修复**：改为先 curl 下载到临时文件（带 `--retry 3`），再 gpg 解码，整体加最多 3 次外层重试循环。
+### 问题 3：Windows 报"声卡未安装"/ noVNC 无声音
+
+**现象**：通过 http://localhost:8006 访问 Windows，系统托盘报声卡未安装。
+
+**原因**：noVNC 本身就是纯视频流，**不支持音频**。且 dockur/windows 不识别 `AUDIO=pulse` 这类环境变量（QEMU 启动命令里根本没有 `-audiodev` 参数）。往 docker-compose.yml 里加 PulseAudio socket 挂载也无效。
+
+**正确解法**：用 **RDP 连接**代替 noVNC，RDP 协议原生支持音频重定向：
+```bash
+sudo apt install freerdp2-x11 -y
+xfreerdp /v:localhost:3389 /u:windows /p:windows /sound:sys:pulse /dynamic-resolution /cert:ignore /scale:140
+```
+- `/cert:ignore` — 跳过自签名证书校验
+- `/scale:140` — 放大到140%，画面大小合适（支持100/140/180）
+- `/dynamic-resolution` — 动态分辨率跟随窗口大小
+
+或用 Remmina → 新建 RDP 连接 → 音频选「在本机播放」。
