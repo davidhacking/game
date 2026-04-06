@@ -4,7 +4,7 @@
 
 set -e
 
-COMPOSE_FILE="$HOME/windows-docker/docker-compose.yml"
+COMPOSE_FILE="$(dirname "$0")/docker-compose.yml"
 RDP_HOST="localhost"
 RDP_PORT="3389"
 RDP_USER="windows"

@@ -39,6 +39,7 @@ DEFAULT_CONFIG = {
     "host": "localhost",
     "port": 2222,
     "user": "windows",
+    "password": "",
     "key": "~/.ssh/id_rsa",
     "jump": "",
 }
@@ -63,6 +64,7 @@ def load_config() -> dict:
         "WIN_HOST": "host",
         "WIN_PORT": "port",
         "WIN_USER": "user",
+        "WIN_PASSWORD": "password",
         "WIN_KEY": "key",
         "WIN_JUMP": "jump",
     }
@@ -72,7 +74,8 @@ def load_config() -> dict:
             cfg[cfg_key] = int(val) if cfg_key == "port" else val
 
     cfg["port"] = int(cfg["port"])
-    cfg["key"] = str(Path(cfg["key"]).expanduser())
+    if cfg.get("key"):
+        cfg["key"] = str(Path(cfg["key"]).expanduser())
     return cfg
 
 
@@ -86,8 +89,10 @@ def connect(cfg: dict) -> paramiko.SSHClient:
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
     pkey = None
-    key_path = cfg["key"]
-    if os.path.exists(key_path):
+    key_path = cfg.get("key", "")
+    if key_path:
+        key_path = str(Path(key_path).expanduser())
+    if key_path and os.path.exists(key_path):
         try:
             pkey = paramiko.RSAKey.from_private_key_file(key_path)
         except Exception:
@@ -96,13 +101,16 @@ def connect(cfg: dict) -> paramiko.SSHClient:
             except Exception:
                 pass
 
+    password = cfg.get("password") or None
+
     connect_kwargs = {
         "hostname": cfg["host"],
         "port": cfg["port"],
         "username": cfg["user"],
         "pkey": pkey,
-        "look_for_keys": True,
-        "allow_agent": True,
+        "password": password,
+        "look_for_keys": bool(pkey),
+        "allow_agent": bool(pkey),
         "timeout": 10,
     }
 
@@ -280,10 +288,25 @@ def cmd_exec(client: paramiko.SSHClient, script_path: str):
         sys.exit(1)
 
     remote_path = f"C:\\Windows\\Temp\\win_ctrl_{local_path.name}"
-    cmd_upload(client, str(local_path), remote_path)
 
-    remote_escaped = remote_path.replace("\\", "\\\\")
-    code, out, err = run_ps(client, f"& '{remote_path}'", timeout=120)
+    # 读取脚本内容，加上 UTF-8 BOM 后再上传，防止 PowerShell 解析中文出错
+    content = local_path.read_bytes()
+    bom = b'\xef\xbb\xbf'
+    if not content.startswith(bom):
+        content = bom + content
+    # 写入临时文件再上传
+    with tempfile.NamedTemporaryFile(suffix='.ps1', delete=False) as tmp:
+        tmp.write(content)
+        tmp_path = tmp.name
+    try:
+        cmd_upload(client, tmp_path, remote_path)
+    finally:
+        os.unlink(tmp_path)
+
+    # 使用 Bypass 执行策略以避免 Windows 脚本执行限制
+    # 用 -Command 而非 -File，避免 UNC/编码问题
+    cmd = f'powershell -ExecutionPolicy Bypass -NonInteractive -NoProfile -Command "& \'{remote_path}\'"'
+    code, out, err = run_cmd(client, cmd, timeout=600)
     if out.strip():
         print(out)
     if err.strip():
