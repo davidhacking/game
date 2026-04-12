@@ -1,0 +1,27 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# 模型和数据 (大文件, 通过 train.sh 生成)
+models/
+data/
+results/
+qlib_data/
+
+# 运行时垃圾
+home/
+mlruns/
+
+# win_ctrl 敏感信息
+win_ctrl/config.json
+win_ctrl/.venv/
+win_ctrl/uv.lock
+win_ctrl/test_download.ps1
+win_ctrl/update_docker_compose.sh
+
+# OS
+.DS_Store
+*.swp
+catboost_info/
