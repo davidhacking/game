@@ -27,7 +27,7 @@ def build_training_data(use_cache=True):
         print('  Cached: %d rows, %d ETFs' % (len(all_data), all_data['etf_code'].nunique()))
     else:
         print('  Downloading multi-ETF data...')
-        raw = load_multi_etf(start='2015-01-01', end='2027-01-01', min_rows=500)
+        raw = load_multi_etf(start='2015-01-01', min_rows=500)
         if len(raw) == 0:
             raise ValueError('No ETF data downloaded!')
         print('  Building features for each ETF...')

@@ -52,7 +52,7 @@ def main(start_date=None, etf_code_override=None, initial_cash=None):
         sys.exit(1)
 
     # 加载 ETF 数据
-    df = load_data(etf_code, start='2015-01-01', end='2027-01-01')
+    df = load_data(etf_code, start='2015-01-01')
     df = build_features(df)
     c = df['close']
     hw = {int(k): v for k, v in meta.get('horizon_weights', HORIZON_WEIGHTS).items()}

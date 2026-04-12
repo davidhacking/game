@@ -61,7 +61,7 @@ def _futu_kline(code, start, end):
     return df
 
 
-def load_data(code, start='2020-01-01', end='2027-01-01'):
+def load_data(code, start='2020-01-01', end=''):
     """
     从 FutuOpenD 获取数据, 落一份CSV缓存
 
@@ -77,22 +77,26 @@ def load_data(code, start='2020-01-01', end='2027-01-01'):
     cache_path = os.path.join(DATA_DIR, '%s.csv' % safe_code)
 
     # 尝试增量更新: 如果缓存存在, 只下载最新部分
+    from datetime import date as _date
+    today = _date.today().strftime('%Y-%m-%d')
+    end_display = end if end else today
+
     cached = None
     if os.path.exists(cache_path):
         cached = pd.read_csv(cache_path)
         cached['date'] = pd.to_datetime(cached['date']).dt.strftime('%Y-%m-%d')
         last_date = cached['date'].max()
-        if last_date >= end[:10]:
+        if last_date >= today:
             print('  Cache hit: %s (%d rows, up to %s)' % (cache_path, len(cached), last_date))
             return cached
         # 增量: 从 last_date 后一天开始下载
         fetch_start = (pd.Timestamp(last_date) + pd.DateOffset(days=1)).strftime('%Y-%m-%d')
-        print('  Incremental update: %s -> %s' % (last_date, end[:10]))
+        print('  Incremental update: %s -> %s' % (last_date, end_display))
     else:
         fetch_start = start
 
     # 从 FutuOpenD 下载
-    print('  Fetching %s from FutuOpenD (%s ~ %s)...' % (code, fetch_start, end[:10]))
+    print('  Fetching %s from FutuOpenD (%s ~ %s)...' % (code, fetch_start, end_display))
     new_data = _futu_kline(code, fetch_start, end)
 
     if len(new_data) == 0 and cached is not None:
@@ -314,7 +318,7 @@ def get_etf_list():
     return base
 
 
-def load_multi_etf(etf_list=None, start='2015-01-01', end='2027-01-01', min_rows=500):
+def load_multi_etf(etf_list=None, start='2015-01-01', end='', min_rows=500):
     """
     批量下载多只ETF，合并成一个大DataFrame用于联合训练
 

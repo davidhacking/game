@@ -33,7 +33,7 @@ def _futu_to_num(futu_code):
 def _predict_stock(model, feat_cols, futu_code):
     """预测单只股票, 返回 (smoothed_pred, price, date_str) or (None,None,None)"""
     try:
-        df = load_data(futu_code, start='2015-01-01', end='2027-01-01')
+        df = load_data(futu_code, start='2015-01-01')
         if len(df) < 130:
             return None, None, None
         df = build_features(df)
