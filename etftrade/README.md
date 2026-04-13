@@ -645,3 +645,18 @@ trade.sh
 2. **FT-Transformer 早停较快**: 31个epoch就停了, 说明特征信号有限。但融合MAE (0.0563) 低于任何单模型, 证明 Transformer 学到了 GBDT 没学到的信息。
 3. **暴涨后空仓期**: 模型学到"暴涨后短期回调"模式, 2025年8月清仓2个月, 错过横盘收益。这是风控代价 (同期躲过了19%回撤)。
 4. **单标的风险**: 只交易一只 ETF, 无法分散。可扩展 BUY_LIST 支持多标的轮动。
+
+## 远程
+host
+- david@192.168.1.2 # home
+- -p 50053 david@8.155.1.245 # work
+```prompt
+ssh 到 host 机器上帮我完成下股票交易，你可以先读取下/home/david/MF/trade_a50_v2/README.md 文件熟悉下项目，之后（/home/david/MF/trade_a50_v2）就是我们的工作目录
+环境校验：
+1.futuopend 正常，通过 cd /home/david/MF/trade_a50_v2/ && ./test_futuopend.sh  校验能获取股票股价信息
+2.windows docker 启动正常，ths软件启动正常，通过 cd /home/david/MF/trade_a50_v2/ && ./load_position.sh 看能获取用户持仓信息
+进行交易：
+通过 cd /home/david/MF/trade_a50_v2/ && ./trade.sh 做一下交易，你需要确认下代码，会先读取用户持仓，然后通过futuopend获取最新股价信息，最后通过windows ths软件进行了所有买卖交易，并且是先做卖出在做买入
+
+目前是work环境
+```
